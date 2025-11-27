@@ -1,6 +1,6 @@
 # codeforces-solutions
 
-solutions of CodeForces
+solutions of Codeforces
 
 https://codeforces.com
 
