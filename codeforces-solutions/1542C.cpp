@@ -1,29 +1,45 @@
 #include<bits/stdc++.h>
 using namespace std;
 
-int smallest[50];
-void compute(){
-    for(int i = 1; i <= 1000; ++i){
-        for(int j = 2; j < 50; ++j){
-            if(smallest[j] == 0 && i % j != 0){
-                smallest[j] = i;
-            }
-        }
-    }
+#define int long long
+const int INF = 1e18;
 
-    for(int i = 1; i <= 49; ++i){
-        cout << i << ": " << smallest[i] << '\n';
-    }
+int lcm(int a, int b){
+    a /= __gcd(a, b);
+    if(a > INF / b) return INF;
+
+    return a * b;
 }
+
+const int MOD = 1e9 + 7;
 
 void solve(){
     int n;
+    cin >> n;
+
+    int L = 1, nxtL = 1;
+    int ans = 0;
+    for(int num = 2; num <= 100; ++num){
+        L = lcm(L, num - 1);
+        nxtL = lcm(L, num);
+
+        ans += num * (n / L) % MOD;
+        ans -= num * (n / nxtL) % MOD;
+        ans %= MOD;
+    }
+
+    cout << (ans + MOD) % MOD << '\n';
 }
 
 signed main(){
     ios_base::sync_with_stdio(0); cin.tie(0);
 
-    compute();
+    int t;
+    cin >> t;
+
+    while(t--){
+        solve();
+    }
 
     return 0;
 }
