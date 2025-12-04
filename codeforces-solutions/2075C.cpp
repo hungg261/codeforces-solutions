@@ -8,25 +8,28 @@ void solve(){
     cin >> n >> m;
 
     vector<int> arr(m + 1);
+    vector<int> mark(n + 1, 0);
+
     for(int i = 1; i <= m; ++i){
         cin >> arr[i];
+        ++mark[arr[i]];
     }
 
     sort(begin(arr), end(arr));
-    int ans = 0;
-    for(int i = 1; i <= m; ++i){
-        for(int j = 1; j <= arr[i]; ++j){
-            int idx = lower_bound(begin(arr) + 1, end(arr), n - j) - begin(arr);
-            int delta = m - idx + 1;
 
-//            if(i >= idx) --delta;
+    int ans = 0, suf = mark[n];
+    for(int j = n - 1; j >= 1; --j){
+        suf += mark[j];
 
-            ans += delta;
-            cerr << i << ": " << delta << "\n";
-        }
+        int idx = lower_bound(begin(arr) + 1, end(arr), n - j) - begin(arr);
+        int delta = m - idx + 1;
+
+        ans += delta * suf;
     }
+
     for(int i = 1; i <= m; ++i){
-        ans -= max(0LL, arr[i] - (n - arr[i]) + 1);
+        int cur = min(n - 1, arr[i]);
+        ans -= max(0LL, cur - (n - cur) + 1);
     }
 
     cout << ans << '\n';
