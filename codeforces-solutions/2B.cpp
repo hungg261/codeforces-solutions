@@ -25,79 +25,62 @@ struct State{
 const int dx[2] = {0, 1}, dy[2] = {1, 0};
 const int MAXN = 1000, INF = 1e9;
 int n, arr[MAXN + 5][MAXN + 5];
-int par[MAXN + 5][MAXN + 5];
-State dp[MAXN + 5][MAXN + 5];
+int dp2[MAXN + 5][MAXN + 5], dp5[MAXN + 5][MAXN + 5];
+int dp[MAXN + 5][MAXN + 5];
 
+string res;
 void solve(){
-    for(int i = 1; i <= n; ++i) dp[i][0] = dp[0][i] = {INF, INF};
-    dp[1][1] = {cnt(arr[1][1], 2), cnt(arr[1][1], 5)};
-
+    for(int i = 2; i <= n; ++i) dp2[i][0] = dp2[0][i] = dp5[i][0] = dp5[0][i] = INF;
     for(int i = 1; i <= n; ++i){
         for(int j = 1; j <= n; ++j){
-            if(i == 1 && j == 1) continue;
-
-            dp[i][j] = {INF, INF};
-
-            for(int d = 0; d < 2; ++d){
-                int nx = i - dx[d], ny = j - dy[d];
-                if(1 <= nx && nx <= n && 1 <= ny && ny <= n){
-                    int c2 = cnt(arr[i][j], 2), c5 = cnt(arr[i][j], 5);
-                    State cur = dp[nx][ny];
-
-                    cur.cnt2 += c2;
-                    cur.cnt5 += c5;
-
-                    if(cur < dp[i][j]){
-                        par[i][j] = d;
-                        dp[i][j] = cur;
-                    }
-                }
+            if(arr[i][j] == 0){
+                dp2[i][j] = dp5[i][j] = INF;
+                continue;
             }
+
+            dp2[i][j] = min(dp2[i - 1][j], dp2[i][j - 1]) + cnt(arr[i][j], 2);
+            dp5[i][j] = min(dp5[i - 1][j], dp5[i][j - 1]) + cnt(arr[i][j], 5);
         }
     }
+    bool use2 = dp2[n][n] < dp5[n][n];
+    int ans = min(dp2[n][n], dp5[n][n]);
 
-    for(int i = 1; i <= n; ++i){
-        for(int j = 1; j <= n; ++j){
-            cerr << dp[i][j].cnt2 << "/" << dp[i][j].cnt5 << "\t";
-        }
-        cerr << '\n';
+    if(!res.empty() && ans >= 1){
+        cout << "1\n";
+        cout << res << '\n';
+        return;
     }
-
-    cout << dp[n][n].get() << '\n';
+    res = "";
 
     int cx = n, cy = n;
-    string res;
+    while(cx > 1 && cy > 1){
+        if(use2){
+            if(dp2[cx - 1][cy] < dp2[cx][cy - 1]){
+                res += 'D';
+                --cx;
+            }
+            else{
+                res += 'R';
+                --cy;
+            }
+        }
+        else{
+            if(dp5[cx - 1][cy] < dp5[cx][cy - 1]){
+                res += 'D';
+                --cx;
+            }
+            else{
+                res += 'R';
+                --cy;
+            }
 
-    while(cx * cy != -1){
-        int d = par[cx][cy];
-        res += d == 0 ? 'R' : 'D';
+        }
 
-        cx -= dx[d];
-        cy -= dy[d];
     }
+    if(cx == 1) res += string(cy - 1, 'R');
+    if(cy == 1) res += string(cx - 1, 'D');
 
-//    while(cx * cy != 1){
-//        for(int d = 0; d < 2; ++d){
-//            int nx = cx - dx[d], ny = cy - dy[d];
-//            if(1 <= nx && nx <= n && 1 <= ny && ny <= n){
-//                int c2 = cnt(arr[cx][cy], 2), c5 = cnt(arr[cx][cy], 5);
-//                State cur = dp[nx][ny];
-//
-//                cur.cnt2 += c2;
-//                cur.cnt5 += c5;
-//
-//                if(cur.get() == dp[cx][cy].get()){
-//                    res += (d == 0 ? 'R' : 'D');
-//                    cx = nx;
-//                    cy = ny;
-//                    goto passed;
-//                }
-//            }
-//        }
-//
-//        passed: NULL;
-//    }
-
+    cout << ans << '\n';
     reverse(begin(res), end(res));
     cout << res << '\n';
 }
@@ -105,9 +88,13 @@ void solve(){
 signed main(){
     ios_base::sync_with_stdio(0); cin.tie(0);
     cin >> n;
+
     for(int i = 1; i <= n; ++i){
         for(int j = 1; j <= n; ++j){
             cin >> arr[i][j];
+            if(res.empty() && arr[i][j] == 0){
+                res = string(i - 1, 'D') + string(n - 1, 'R') + string(n - i,'D');
+            }
         }
     }
 
@@ -115,3 +102,13 @@ signed main(){
 
     return 0;
 }
+
+/*
+6
+5 5 4 10 5 5
+7 10 8 7 6 6
+7 1 7 9 7 8
+5 5 3 3 10 9
+5 8 10 6 3 8
+3 10 5 4 3 4
+*/
