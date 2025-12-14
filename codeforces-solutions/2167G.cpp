@@ -22,15 +22,19 @@ void solve(){
     for(int i = 1; i <= n; ++i) cin >> c[i];
 
     compress(a);
-    vector<vector<int>> dp(n + 1, vector<int>(n + 1, INF));
-    dp[1][a[1]] = 0;
-    for(int j = 1; j <= n; ++j) if(j != a[1]) dp[1][j] = c[1];
+    vector<vector<int>> minDp(2, vector<int>(n + 1, INF));
+    for(int j = 1; j <= n; ++j){
+        int cur = c[1] * (j != a[1]);
+        minDp[1][j] = min(minDp[1][j - 1], cur);
+    }
 
     for(int i = 2; i <= n; ++i){
         for(int j = 1; j <= n; ++j){
-            for(int k = 1; k <= j; ++k){
-                dp[i][j] = min(dp[i][j], dp[i - 1][k]) + c[i] * (j != a[i]);
-            }
+            int cur = minDp[i - 1 & 1][j] + c[i] * (j != a[i]);
+            minDp[i & 1][j] = min(minDp[i & 1][j - 1], cur);
+//            for(int k = 1; k <= j; ++k){
+//                dp[i][j] = min(dp[i][j], dp[i - 1][k]) + c[i] * (j != a[i]);
+//            }
         }
     }
 
@@ -42,7 +46,8 @@ void solve(){
 //        cerr << '\n';
 //    }
 
-    int ans = *min_element(begin(dp[n]) + 1, end(dp[n]));
+//    int ans = *min_element(begin(dp[n & 1]) + 1, end(dp[n & 1]));
+    int ans = minDp[n & 1][n];
     cout << ans << '\n';
 }
 
