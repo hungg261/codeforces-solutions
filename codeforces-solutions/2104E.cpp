@@ -10,11 +10,11 @@ int n, k, q;
 string s;
 
 int dp[MAXN + 5];
-void solve(){
+void compute(){
     int last[26] = {};
     for(int c = 0; c < k; ++c) last[c] = n + 1;
 
-    for(int i = n; i >= 0; --i){
+    for(int i = n + 1; i >= 0; --i){
         for(int c = 0; c < k; ++c){
             nxt[i][c] = last[c];
         }
@@ -22,23 +22,25 @@ void solve(){
         if(i > 0) last[s[i] - 'a'] = i;
     }
 
-    for(int i = 1; i <= n; ++i){
+    memset(dp, 0x3f, sizeof dp);
+    dp[n + 1] = 0;
+    for(int i = n; i >= 0; --i){
         for(int c = 0; c < k; ++c){
-            cerr << nxt[i][c] << ' ';
+            dp[i] = min(dp[i], dp[nxt[i][c]] + 1);
         }
-        cerr << '\n';
     }
-    cerr << '\n';
+}
 
-//    memset(dp, 0x3f, sizeof dp);
-//    dp[n + 1] = 0;
-//    for(int i = n + 1; i >= 1; --i){
-//        for(int c = 0; c < k; ++c){
-//            minimize(dp[nxt[i][c]], dp[i] + 1);
-//        }
-//    }
+void solve(){
+    string t;
+    cin >> t;
 
-//    for(int i = 0; i <= n + 1; ++i) cerr << dp[i] << ' '; cerr << '\n';
+    int pos = 0;
+    for(char c: t){
+        pos = nxt[pos][c - 'a'];
+    }
+
+    cout << dp[pos] << '\n';
 }
 
 signed main(){
@@ -48,7 +50,11 @@ signed main(){
     cin >> q;
     s = "#" + s;
 
-    solve();
+    compute();
+
+    while(q--){
+        solve();
+    }
 
     return 0;
 }
