@@ -12,10 +12,12 @@ void solve(){
         return;
     }
 
-    for(int a = A; a <= r; a += G){
-        for(int b = B; b >= a; b -= G){
+    for(int len = B - A; len >= 0; len -= G){
+        for(int a = A; a + len <= B; a += G){
+            int b = a + len;
             if(__gcd(a, b) == G){
                 cout << a << ' ' << b << '\n';
+                return;
             }
         }
     }
