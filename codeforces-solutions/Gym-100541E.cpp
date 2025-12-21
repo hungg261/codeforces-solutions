@@ -176,13 +176,6 @@ void query(){
 signed main(){
     ios_base::sync_with_stdio(0); cin.tie(0);
 
-//    update(1, 1, 6, 1, 4, 20, 1);
-//    update(1, 1, 6, 2, 6, 15, 1);
-//    update(1, 1, 6, 2, 6, 15, -1);
-//
-//    dfs(1, 1, 6);
-//    get(1, 1, 6, 1, 6).debug();
-
     int t;
     cin >> t;
 
