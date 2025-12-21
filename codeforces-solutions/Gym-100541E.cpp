@@ -1,4 +1,5 @@
 #include<bits/stdc++.h>
+#define int long long
 using namespace std;
 
 const int PCNT = 35;
@@ -25,45 +26,20 @@ struct Node{
     int lazy[PCNT];
 
     Node(){
-        memset(cnt, 0, sizeof cnt);
-        memset(lazy, 0, sizeof lazy);
+        clear();
     }
 
-    Node operator | (const Node& other){
-        Node res = *this + other;
-        memset(res.lazy, 0, sizeof res.lazy);
-        return res;
+    void clear(){
+        memset(cnt, 0, sizeof cnt);
+        memset(lazy, 0, sizeof lazy);
     }
 
     Node operator + (const Node& other){
         Node res;
         for(int i = 0; i < PCNT; ++i){
             res.cnt[i] = cnt[i] + other.cnt[i];
-            res.lazy[i] = lazy[i] + other.lazy[i];
         }
 
-        return res;
-    }
-
-    Node operator * (const int k){
-        Node res;
-        for(int i = 0; i < PCNT; ++i){
-            res.cnt[i] = cnt[i] * k;
-            res.lazy[i] = lazy[i] * k;
-        }
-        return res;
-    }
-
-    static Node pfactor(int X, int mul = 1){
-        Node res;
-        for(int i = 0; i < PCNT; ++i){
-            int p = primes[i];
-            while(X % p == 0){
-                res.cnt[i] += mul;
-                res.lazy[i] += mul;
-                X /= p;
-            }
-        }
         return res;
     }
 
@@ -84,14 +60,16 @@ struct Node{
 
 Node nodes[MAXN * 4 + 5];
 
-void down(int id){
+void down(int id, int l, int r){
+    int mid = (l + r) >> 1;
+
     for(int c = 0; c < PCNT; ++c){
         int& lz = nodes[id].lazy[c];
 
-        nodes[id << 1].cnt[c] += lz;
+        nodes[id << 1].cnt[c] += lz * (mid - l + 1);
         nodes[id << 1].lazy[c] += lz;
 
-        nodes[id << 1 | 1].cnt[c] += lz;
+        nodes[id << 1 | 1].cnt[c] += lz * (r - mid);
         nodes[id << 1 | 1].lazy[c] += lz;
 
         lz = 0;
@@ -101,34 +79,44 @@ void down(int id){
 void update(int id, int l, int r, int u, int v, int X, int mul){
     if(r < u || v < l) return;
     if(u <= l && r <= v){
-        nodes[id] = nodes[id] + Node::pfactor(X, mul) * (r - l + 1);
+        int temp = X;
+        for(int c = 0; c < PCNT; ++c){
+            int p = primes[c], co = 0;
+            while(temp % p == 0){
+                ++co;
+                temp /= p;
+            }
+
+            nodes[id].cnt[c] += mul * co * (r - l + 1);
+            nodes[id].lazy[c] += mul * co;
+        }
         return;
     }
 
-    down(id);
+    down(id, l, r);
 
     int mid = (l + r) >> 1;
     update(id << 1, l, mid, u, v, X, mul);
     update(id << 1 | 1, mid + 1, r, u, v, X, mul);
-    nodes[id] = nodes[id << 1] | nodes[id << 1 | 1];
+    nodes[id] = nodes[id << 1] + nodes[id << 1 | 1];
 }
 
 Node get(int id, int l, int r, int u, int v){
     if(r < u || v < l) return Node();
     if(u <= l && r <= v) return nodes[id];
 
-    down(id);
+    down(id, l, r);
 
     int mid = (l + r) >> 1;
-    return get(id << 1, l, mid, u, v) | get(id << 1 | 1, mid + 1, r, u, v);
+    return get(id << 1, l, mid, u, v) + get(id << 1 | 1, mid + 1, r, u, v);
 }
 
 int n, q;
 
 void update(int l, int r, int X, int mul){
     if(l > r){
-        update(1, 1, n, r, n, X, mul);
-        update(1, 1, n, 1, l, X, mul);
+        update(1, 1, n, l, n, X, mul);
+        update(1, 1, n, 1, r, X, mul);
     }
     else{
         update(1, 1, n, l, r, X, mul);
@@ -137,7 +125,7 @@ void update(int l, int r, int X, int mul){
 
 int get(int l, int r, int M){
     if(l > r){
-        Node res = get(1, 1, n, r, n) | get(1, 1, n, 1, l);
+        Node res = get(1, 1, n, l, n) + get(1, 1, n, 1, r);
         return res.calc(M);
     }
     else{
@@ -145,28 +133,62 @@ int get(int l, int r, int M){
     }
 }
 
+void reset(int id, int l, int r){
+    nodes[id].clear();
+    if(l == r) return;
+
+    int mid = (l + r) >> 1;
+    reset(id << 1, l, mid);
+    reset(id << 1 | 1, mid + 1, r);
+}
+
+void dfs(int id, int l, int r){
+    cerr << id << " " << l << " " << r << ": "; nodes[id].debug();
+    if(l == r) return;
+
+    down(id, l, r);
+
+    int mid = (l + r) >> 1;
+    dfs(id << 1, l, mid);
+    dfs(id << 1 | 1, mid + 1, r);
+}
+
+void query(){
+    cin >> n >> q;
+
+    reset(1, 1, n);
+    while(q--){
+        int type, l, r, V;
+        cin >> type >> l >> r >> V;
+
+        if(type == 0){
+            cout << get(l, r, V) << '\n';
+        }
+        else if(type == 1){
+            update(l, r, V, 1);
+        }
+        else{
+            update(l, r, V, -1);
+        }
+    }
+}
+
 signed main(){
     ios_base::sync_with_stdio(0); cin.tie(0);
 
-    update(1, 1, 6, 1, 4, 20, 1);
-    update(1, 1, 6, 2, 6, 15, 1);
-    get(1, 1, 6, 1, 6).debug();
-
-//    cin >> n >> q;
-//    while(q--){
-//        int type, l, r, V;
-//        cin >> type >> l >> r >> V;
+//    update(1, 1, 6, 1, 4, 20, 1);
+//    update(1, 1, 6, 2, 6, 15, 1);
+//    update(1, 1, 6, 2, 6, 15, -1);
 //
-//        if(type == 0){
-//            cout << get(l, r, V) << '\n';
-//        }
-//        else if(type == 1){
-//            update(l, r, V, 1);
-//        }
-//        else{
-//            update(l, r, V, -1);
-//        }
-//    }
+//    dfs(1, 1, 6);
+//    get(1, 1, 6, 1, 6).debug();
+
+    int t;
+    cin >> t;
+
+    while(t--){
+        query();
+    }
 
     return 0;
 }
