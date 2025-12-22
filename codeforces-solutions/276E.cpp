@@ -1,4 +1,5 @@
 #include<bits/stdc++.h>
+#define int long long
 using namespace std;
 
 struct FenwickTree{
@@ -10,6 +11,7 @@ struct FenwickTree{
 
     void update(int idx, int val){
         ++idx;
+        if(idx <= 0) return;
 
         for(int i = idx; i <= n; i += i & -i){
             BIT[i] += val;
@@ -18,6 +20,7 @@ struct FenwickTree{
 
     int get(int idx){
         ++idx;
+        if(idx <= 0) return 0;
 
         int res = 0;
         for(int i = idx; i > 0; i -= i & -i){
@@ -26,29 +29,27 @@ struct FenwickTree{
         return res;
     }
 
-    int get(int l, int r){ return get(r) - get(l - 1); }
-
-    void update(int l, int r, int val){
-        r = min(r, n);
-        l = max(l, 0);
+    void update(int l, int r, int x){
+        l = max(0ll, l); r = min(n, r);
         if(l > r) return;
 
-        update(r + 1, -val);
-        update(l, val);
+        update(l, x);
+        update(r + 1, -x);
     }
+
+    int get(int l, int r){ return get(r) - get(l - 1); }
 };
 
 const int MAXN = 1e5;
 int n, q;
 vector<int> adj[MAXN + 5];
 
-int h[MAXN + 5];
-int ChainID[MAXN + 5], curChain = 0,
-    Pos[MAXN + 5], ChainSz[MAXN + 5];
-
+int h[MAXN + 5], maxH[MAXN + 5];
+int ChainID[MAXN + 5], ChainSz[MAXN + 5],
+    curChain = 0, curPos = 0;
 void dfs(int u, int prv){
     ChainID[u] = curChain;
-    Pos[u] = ++ChainSz[curChain];
+    ChainSz[curChain]++;
 
     for(int v: adj[u]){
         if(v == prv) continue;
@@ -58,19 +59,32 @@ void dfs(int u, int prv){
     }
 }
 
-FenwickTree global, sub[MAXN + 5];
-void solve(){
-    global = FenwickTree(n + 5);
-    for(int i = 1; i <= curChain; ++i){
-        sub[i] = FenwickTree(ChainSz[i] + 5);
+FenwickTree glob, fwt[MAXN + 5];
+
+void add(int u, int x, int d){
+    if(u == 1){
+        glob.update(0, d, x);
+        return;
     }
 
-    for(int u = 1; u <= n; ++u){
-        cerr << "dbg: " << ChainID[u] << ' ' << Pos[u] << '\n';
+    if(d >= h[u]){
+        glob.update(0, d - h[u], x);
+        fwt[ChainID[u]].update(-h[u] + d + 1, h[u] + d, x);
+        return;
     }
-    for(int u = 1; u <= curChain; ++u){
-        cerr << "dbg2: " << ChainSz[u] << '\n';
+
+    fwt[ChainID[u]].update(h[u] - d, h[u] + d, x);
+}
+
+int get(int u){
+    return fwt[ChainID[u]].get(h[u]) + glob.get(h[u]);
+}
+
+void solve(){
+    for(int id = 0; id <= curChain; ++id){
+        fwt[id] = FenwickTree(ChainSz[id] + 5);
     }
+    glob = FenwickTree(n + 5);
 
     while(q--){
         int type;
@@ -80,22 +94,13 @@ void solve(){
             int u, x, d;
             cin >> u >> x >> d;
 
-            if(u == 1){
-                global.update(0, d, x);
-                continue;
-            }
-
-            int curID = ChainID[u];
-            sub[curID].update(Pos[u], Pos[u] + d, x);
-
-            if(d > h[u]){
-                global.update(0, d - h[u])
-            }
+            add(u, x, d);
         }
         else{
             int u;
             cin >> u;
 
+            cout << get(u) << '\n';
         }
     }
 }
@@ -113,8 +118,12 @@ signed main(){
 
     for(int v: adj[1]){
         ++curChain;
-        h[v] = 1;
+        h[v] = h[1] + 1;
         dfs(v, 1);
+    }
+
+    for(int u = 1; u <= n; ++u){
+        maxH[u] = ChainSz[ChainID[u]];
     }
 
     solve();
