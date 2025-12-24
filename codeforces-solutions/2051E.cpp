@@ -27,9 +27,6 @@ void solve(){
         events[a[i]].push_back(0);
         events[b[i]].push_back(1);
     }
-//    sort(begin(events), end(events), [](auto& x, auto& y){
-//            return x.first < y.first || (x.first == y.first && x.second > y.second);
-//         });
 
     int unclosed = 0, unopen = n;
     int ans = 0;
