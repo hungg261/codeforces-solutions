@@ -1,78 +1,52 @@
 #include<bits/stdc++.h>
 using namespace std;
 
-#define int long long
-
-string S, T;
-bool used[20];
+string a, b;
+string res;
 
 signed main(){
     ios_base::sync_with_stdio(0); cin.tie(0);
 
-    cin >> S >> T;
+    cin >> a >> b;
 
-    sort(begin(S), end(S), greater<char>());
-
-    if(S.size() < T.size()){
-        cout << S << '\n';
+    sort(begin(a), end(a), greater<char>());
+    if(a.size() < b.size()){
+        cout << a << '\n';
         return 0;
     }
 
-    int n = S.size();
+    [&](){
 
-    bool smaller = false;
-    vector<int> res;
-    for(int j = 0; j < n; ++j){
-        if(smaller) break;
+    int len = b.size();
+    for(int chosen = 0; chosen < len; ++chosen){
+        int sz = a.size();
+        for(int i = 0; i < sz; ++i){
+            if(a[i] < b[chosen]){
+                res += a[i];
+                for(int j = 0; j < sz; ++j){
+                    if(j != i) res += a[j];
+                }
 
-        int lim = smaller ? 9 : T[j];
-        int i = 0;
-        for(; i < n; ++i){
-            if(!used[i] && S[i] <= lim){
-                break;
+                return;
             }
-        }
+            else if(a[i] == b[chosen]){
+                string left = a;
+                left.erase(begin(left) + i);
+                sort(begin(left), end(left));
 
-        if(i >= n){
-            if(j == 0){
-                cout << "-s1\n";
-                return 0;
-            }
+                if(left <= b.substr(chosen + 1)){
+                    res += a[i];
+                    a.erase(begin(a) + i);
 
-            used[res.back()] = false;
-            res.pop_back();
-
-            int q = 0;
-            for(; q < n; ++q){
-                if(!used[q] && S[q] < T[j - 1]){
                     break;
                 }
             }
-
-//            cerr << q << '\n';
-            if(q >= n){
-                cout << "-1\n";
-                return 0;
-            }
-
-            res.push_back(q);
-            smaller = true;
-            used[q] = true;
-            continue;
         }
-
-        res.push_back(i);
-        smaller = S[i] < lim;
-        used[i] = true;
     }
 
-    for(int i = 0; i < n; ++i){
-        if(!used[i]) res.push_back(i);
-    }
+    }();
 
-    for(int i: res){
-        cout << S[i];
-    }
+    cout << res << '\n';
 
     return 0;
 }
