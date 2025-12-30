@@ -6,20 +6,6 @@ using namespace std;
 string S, T;
 bool used[20];
 
-string Try(int idx, int smaller){
-    if(idx < 0){
-        return "";
-    }
-
-    int lim = smaller ? 9 : T[idx];
-    string best = string(20, (char)200);
-    for(int i = 0; i < (int)S.size(); ++i){
-        if(S[i] <= lim) best = min(best, S[i] + Try(idx - 1, smaller || (S[i] < lim)));
-    }
-
-    return best;
-}
-
 signed main(){
     ios_base::sync_with_stdio(0); cin.tie(0);
 
@@ -32,11 +18,61 @@ signed main(){
         return 0;
     }
 
-    reverse(begin(S), end(S));
-    reverse(begin(T), end(T));
+    int n = S.size();
 
-    int len = S.size();
-    cout << Try(len - 1, 0) << '\n';
+    bool smaller = false;
+    vector<int> res;
+    for(int j = 0; j < n; ++j){
+        if(smaller) break;
+
+        int lim = smaller ? 9 : T[j];
+        int i = 0;
+        for(; i < n; ++i){
+            if(!used[i] && S[i] <= lim){
+                break;
+            }
+        }
+
+        if(i >= n){
+            if(j == 0){
+                cout << "-s1\n";
+                return 0;
+            }
+
+            used[res.back()] = false;
+            res.pop_back();
+
+            int q = 0;
+            for(; q < n; ++q){
+                if(!used[q] && S[q] < T[j - 1]){
+                    break;
+                }
+            }
+
+//            cerr << q << '\n';
+            if(q >= n){
+                cout << "-1\n";
+                return 0;
+            }
+
+            res.push_back(q);
+            smaller = true;
+            used[q] = true;
+            continue;
+        }
+
+        res.push_back(i);
+        smaller = S[i] < lim;
+        used[i] = true;
+    }
+
+    for(int i = 0; i < n; ++i){
+        if(!used[i]) res.push_back(i);
+    }
+
+    for(int i: res){
+        cout << S[i];
+    }
 
     return 0;
 }
