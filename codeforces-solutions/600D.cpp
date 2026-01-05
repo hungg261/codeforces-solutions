@@ -1,9 +1,14 @@
 #include<bits/stdc++.h>
 using namespace std;
 
+#define int long long
+#define double long double
+
 const double pi = acos(-1);
-double to_rad(double value){ return value * pi / 180.0; }
-double to_deg(double value){ return value * 180.0 / pi; }
+inline double to_rad(double value){ return value * pi / 180.0; }
+inline double to_deg(double value){ return value * 180.0 / pi; }
+inline int sq(int x){ return x * x; }
+inline double sq(double x){ return x * x; }
 
 struct Point{
     int x, y;
@@ -12,8 +17,20 @@ struct Point{
         cin >> x >> y;
     }
 
-    double dist(const Point& other){
-        return sqrt((x - other.x) * (x - other.x) + (y - other.y) * (y - other.y));
+    int sqdist(const Point& other) const{
+        return (x - other.x) * (x - other.x) + (y - other.y) * (y - other.y);
+    }
+
+    double dist(const Point& other) const{
+        return sqrt(sqdist(other));
+    }
+
+    bool operator == (const Point& other) const{
+        return x == other.x && y == other.y;
+    }
+
+    int cross(const Point& other) const{
+        return x * other.y - other.x * y;
     }
 };
 
@@ -27,32 +44,35 @@ struct Circle{
     }
 };
 
-Circle A, B;
-double L;
+double solve(const Circle& O1, const Circle& O2){
+    double d = hypotl(O1.O.x - O2.O.x, O1.O.y - O2.O.y);
+    double theta = 2 * acos((sq(O1.r) + sq(d) - sq(O2.r)) / (2.0 * O1.r * d));
 
-void solve(){
-    double gocA = to_deg(acos((L * L + A.r * A.r - B.r * B.r) / (2 * L * A.r))) * 2,
-            gocB = to_deg(acos((L * L + B.r * B.r - A.r * A.r) / (2 * L * B.r))) * 2;
+    double s = sq(O1.r) * theta / 2;
+    double tria = sinl(theta) * sq(O1.r) / 2;
 
-    double quatA = gocA / 360 * (A.r * A.r * pi) - 0.5 * A.r * A.r * sin(to_rad(gocA)),
-            quatB = gocB / 360 * (B.r * B.r * pi) - 0.5 * B.r * B.r * sin(to_rad(gocB));
-
-    double ans = quatA + quatB;
-    cout << fixed << setprecision(20) << ans << '\n';
+    return s - tria;
 }
 
 signed main(){
     ios_base::sync_with_stdio(0); cin.tie(0);
+    Circle A, B;
     A.input();
     B.input();
 
-    L = A.O.dist(B.O);
-    if(A.r + B.r <= L){
+    cout.precision(20);
+
+    if(sq(A.r + B.r) <= A.O.sqdist(B.O)){
         cout << "0\n";
         return 0;
     }
 
-    solve();
+    double res = solve(A, B) + solve(B, A);
+    if(isnan(res)){
+        res = sq(min(A.r, B.r)) * pi;
+    }
+
+    cout << res << '\n';
 
     return 0;
 }
