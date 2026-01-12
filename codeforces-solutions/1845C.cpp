@@ -28,13 +28,6 @@ void solve(){
         if(i > 0) cur[s[i] - '0'] = i;
     }
 
-//    for(int i = 0; i < sz; ++i){
-//        for(int j = 0; j < 10; ++j){
-//            cerr << nxt[i][j] << ' ';
-//        }
-//        cerr << '\n';
-//    }
-
     int curPos = 0;
     for(int i = 0; i < m; ++i){
         int nxtPos = -1;
@@ -43,7 +36,6 @@ void solve(){
         }
 
         curPos = nxtPos;
-//        cerr << curPos << '\n';
 
         if(curPos > sz){
             cout << "YES\n";
