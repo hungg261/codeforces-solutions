@@ -19,16 +19,27 @@ void solve(){
         return;
     }
 
-    int res = __lg((a - b) / 2) + (__lg((a + b) / 2) + 1);
+    set<int> mark;
+    auto Try = [&](int V){
+        for(int i = 1; i * i <= V; ++i){
+            if(V % i == 0){
+                if(i >= b) mark.insert(i);
+                if(V / i >= b) mark.insert(V / i);
+            }
+        }
+    };
 
-    cout << res << '\n';
+    Try((a - b) / 2);
+    Try((a + b) / 2);
+
+    cout << mark.size() << '\n';
 }
 
 signed main(){
     ios_base::sync_with_stdio(0); cin.tie(0);
 
     int t = 1;
-    //cin >> t;
+    cin >> t;
 
     while(t--){
         solve();
