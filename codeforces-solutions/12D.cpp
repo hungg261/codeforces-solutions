@@ -6,60 +6,34 @@ Time (YYYY-MM-DD-hh.mm.ss): 2026-02-03-15.01.55
 #include<bits/stdc++.h>
 using namespace std;
 
-const int MAXN = 5e5;
-vector<int> ys[MAXN + 5];
-vector<int> BIT[MAXN + 5];
-struct FenwickTree2D{
-    int N;
+const int MAXN = 5e5, MAXVAL = 1e9 + 5;
 
-    FenwickTree2D() = default;
-    FenwickTree2D(int n): N(n){}
+struct FenwickTree{
+    int n;
+    vector<int> BIT;
 
-    void fake_point(int x, int y){
-        for(int i = x; i <= N; i += i & -i){
-            ys[i].push_back(y);
+    FenwickTree() = default;
+    FenwickTree(int sz){ n = sz; BIT.resize(sz + 1, 0); }
+
+    void update(int idx, int val){
+        if(idx <= 0) return;
+
+        for(int i = idx; i <= n; i += i & -i){
+            BIT[i] = max(BIT[i], val);
         }
     }
 
-    void fake_rect(int x1, int y1, int x2, int y2){
-        fake_point(x2, y2);
-        fake_point(x1 - 1, y2);
-        fake_point(x2, y1 - 1);
-        fake_point(x1 - 1, y1 - 1);
-    }
+    int get(int idx){
+        if(idx <= 0) return 0;
 
-    void build(){
-        for(int i = 1; i <= N; ++i){
-            sort(begin(ys[i]), end(ys[i]));
-            ys[i].erase(unique(begin(ys[i]), end(ys[i])), end(ys[i]));
-
-            BIT[i].resize(ys[i].size() + 1, 0);
-        }
-    }
-
-    void update(int x, int y, int val){
-        for(int i = x; i <= N; i += i & -i){
-            int j = lower_bound(begin(ys[i]), end(ys[i]), y) - begin(ys[i]) + 1;
-            for(; j < (int)BIT[i].size(); j += j & -j){
-                BIT[i][j] += val;
-            }
-        }
-    }
-
-    int get(int x, int y){
         int res = 0;
-        for(int i = x; i > 0; i -= i & -i){
-            int j = upper_bound(begin(ys[i]), end(ys[i]), y) - begin(ys[i]);
-            for(; j > 0; j -= j & -j){
-                res += BIT[i][j];
-            }
+        for(int i = idx; i > 0; i -= i & -i){
+            res = max(res, BIT[i]);
         }
         return res;
     }
 
-    int get(int x1, int y1, int x2, int y2){
-        return get(x2, y2) - get(x1 - 1, y2) - get(x2, y1 - 1) + get(x1 - 1, y1 - 1);
-    }
+    int get(int l, int r){ return get(r) - get(l - 1); }
 };
 
 struct Lady{
@@ -71,11 +45,9 @@ struct Lady{
     }
 
     bool operator < (const Lady& other) const{
-        if(B == other.B){
-            if(I == other.I) return R > other.R;
-            return I > other.I;
-        }
-        return B < other.B;
+        if(B != other.B) return B < other.B;
+        if(I != other.I) return I < other.I;
+        return R < other.R;
     }
 };
 
@@ -84,44 +56,44 @@ void solve(){
     cin >> n;
 
     vector<Lady> Ladies(n);
-    vector<int> Xvalues;
-    vector<int> Yvalues;
+    vector<int> values;
 
-    for(int i = 0; i < n; ++i) cin >> Ladies[i].B;
+    for(int i = 0; i < n; ++i){
+        cin >> Ladies[i].B;
+    }
     for(int i = 0; i < n; ++i){
         cin >> Ladies[i].I;
-        Xvalues.push_back(Ladies[i].I);
+        values.push_back(Ladies[i].I);
     }
     for(int i = 0; i < n; ++i){
         cin >> Ladies[i].R;
-        Yvalues.push_back(Ladies[i].R);
     }
 
-    sort(begin(Xvalues), end(Xvalues));
-    Xvalues.erase(unique(begin(Xvalues), end(Xvalues)), end(Xvalues));
+    sort(begin(values), end(values));
+    values.erase(unique(begin(values), end(values)), end(values));
 
-    sort(begin(Yvalues), end(Yvalues));
-    Yvalues.erase(unique(begin(Yvalues), end(Yvalues)), end(Yvalues));
-
-    const int MAX = Xvalues.size() + 5;
-    FenwickTree2D fwt(MAX);
+    int MAX = values.size();
     for(Lady& ld: Ladies){
-        ld.I = lower_bound(begin(Xvalues), end(Xvalues), ld.I) - begin(Xvalues) + 1;
-        ld.R = lower_bound(begin(Yvalues), end(Yvalues), ld.R) - begin(Yvalues) + 1;
-        fwt.fake_point(ld.I, ld.R);
+        ld.B = MAXVAL - ld.B;
+
+        ld.I = lower_bound(begin(values), end(values), ld.I) - begin(values);
+        ld.I = MAX - ld.I;
     }
 
     sort(begin(Ladies), end(Ladies));
-    fwt.build();
+    FenwickTree fwt(MAX + 5);
+    int j = 0;
 
     int res = 0;
-    for(int i = n - 1; i >= 0; --i){
-        int cur = fwt.get(Ladies[i].I + 1, Ladies[i].R + 1, MAX, MAX);
-        if(cur > 0){
-            ++res;
+    for(int i = 0; i < n; ++i){
+        while(j < n && Ladies[j].B < Ladies[i].B){
+            fwt.update(Ladies[j].I, Ladies[j].R);
+            ++j;
         }
 
-        fwt.update(Ladies[i].I, Ladies[i].R, 1);
+        if(Ladies[i].R < fwt.get(Ladies[i].I - 1)){
+            ++res;
+        }
     }
 
     cout << res << '\n';
