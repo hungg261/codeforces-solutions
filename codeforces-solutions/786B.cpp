@@ -14,123 +14,60 @@ int n, q, s;
 
 struct Node{
     vector<pair<Node*, int>> edges;
-    Node *l, *r;
-    int dist = INF;
+    int l, r;
 
-    Node(): l(nullptr), r(nullptr){}
-    Node(Node *_l, Node *_r): l(_l), r(_r){}
+    Node() = default;
+    Node(int _l, int _r): l(_l), r(_r) {};
 };
 
 Node *leaf[MAXN + 5];
-Node *uproot, *downroot;
 
-Node *build(int l, int r){
+Node *build1(int l, int r){
+    if(l == r){
+        return leaf[l] = new Node(l, r);
+    }
+
+    int mid = (l + r) >> 1;
+    Node *res = new Node(l, r);
+    res->edges.emplace_back(build1(l, mid), 0);
+    res->edges.emplace_back(build1(mid + 1, r), 0);
+    return res;
+}
+
+Node *build2(int l, int r){
     if(l == r){
         return leaf[l];
     }
 
     int mid = (l + r) >> 1;
-    return new Node(build(l, mid),
-                    build(mid + 1, r));
+    Node *res = new Node(r, l);
+//    cerr << "L: " << l << ' ' << mid << " | " << l << ' ' << r << '\n';
+    build2(l, mid)->edges.emplace_back(res, 0);
+//    cerr << "R: " << mid + 1 << ' ' << r << " | " << l << ' ' << r << '\n';
+    build2(mid + 1, r)->edges.emplace_back(res, 0);
+
+    return res;
 }
 
 void dfs(Node *node){
     if(!node) return;
-    if(node->l) cerr << (node) << ' ' << (node->l) << '\n';
-    if(node->r) cerr << (node) << ' ' << (node->r) << '\n';
 
-    dfs(node->l);
-    dfs(node->r);
-}
-
-void add1(Node *node, int l, int r, int u, int x, int y, int w){
-    if(y < l || r < x) return;
-    if(x <= l && r <= y){
-        leaf[u]->edges.emplace_back(node, w);
-        return;
-    }
-
-    int mid = (l + r) >> 1;
-    add1(node->l, l, mid, u, x, y, w);
-    add1(node->r, mid + 1, r, u, x, y, w);
-}
-
-void add2(Node *node, int l, int r, int x, int y, int v, int w){
-    if(y < l || r < x) return;
-    if(x <= l && r <= y){
-        node->edges.emplace_back(leaf[v], w);
-        return;
-    }
-
-    int mid = (l + r) >> 1;
-    add2(node->l, l, mid, x, y, v, w);
-    add2(node->r, mid + 1, r, x, y, v, w);
-}
-
-void dijkstra(int s){
-    priority_queue<pair<int, Node*>, vector<pair<int, Node*>>, greater<>> pq;
-
-    leaf[s]->dist = 0;
-    pq.push({0, leaf[s]});
-
-    while(!pq.empty()){
-        int cost;
-        Node *u;
-        tie(cost, u) = pq.top();
-        pq.pop();
-
-        if(cost != u->dist) continue;
-
-        for(const pair<Node*, int>& e: u->edges){
-            Node *v; int w;
-            tie(v, w) = e;
-
-            if(cost + w < v->dist){
-                v->dist = cost + w;
-                pq.push({cost + w, v});
-            }
-        }
+    for(const auto& e: node->edges){
+        cout << (node->l) << (node->r) << ' ' << (e.first->l) << (e.first->r) << '\n';
+        dfs(e.first);
     }
 }
 
 signed main(){
     ios_base::sync_with_stdio(0); cin.tie(0);
 
-    cin >> n >> q >> s;
-    for(int i = 1; i <= n; ++i){
-        leaf[i] = new Node();
-    }
-    uproot = build(1, n);
-    downroot = build(1, n);
+    int n;
+    cin >> n;
 
-    while(q--){
-        int type;
-        cin >> type;
+    Node *uproot = build1(1, n);
+    Node *downroot = build2(1, n);
 
-        if(type == 1){
-            int u, v, w;
-            cin >> u >> v >> w;
-
-            add1(uproot, 1, n, u, v, v, w);
-        }
-        else if(type == 2){
-            int u, l, r, w;
-            cin >> u >> l >> r >> w;
-
-            add1(uproot, 1, n, u, l, r, w);
-        }
-        else{
-            int v, l, r, w;
-            cin >> v >> l >> r >> w;
-
-            add2(downroot, 1, n, l, r, v, w);
-        }
-    }
-
-    dijkstra(s);
-    for(int i = 1; i <= n; ++i){
-        cout << leaf[i]->dist << ' ';
-    }
+    dfs(uproot);
 
     return 0;
 }
