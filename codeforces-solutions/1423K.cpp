@@ -6,47 +6,40 @@ Time (YYYY-MM-DD-hh.mm.ss): 2025-12-30-22.52.56
 #include<bits/stdc++.h>
 using namespace std;
 
-bool triangle(int a, int b, int c){
-    return a + b > c && b + c > a && c + a > b;
-}
+const int MAX = 1e6;
+bool not_prime[MAX + 5];
+int pre[MAX + 5];
 
-int trau(int n, bool output = true){
-    int res = 0;
-    for(int a = 1; a <= n; ++a){
-        bool found = false;
-        for(int b = 1; b <= n; ++b){
-            if(a == b) continue;
-
-            int g = __gcd(a, b);
-            if(triangle(a / g, b / g, g)){
-                found = true;
-                break;
-            }
-        }
-
-        if(!found){
-            if(output){
-                cerr << "lonely: " << a << '\n';
-            }
-            ++res;
+void sieve(){
+    not_prime[0] = not_prime[1] = true;
+    for(int i = 2; i * i <= MAX; ++i){
+        if(!not_prime[i]) for(int j = i * i; j <= MAX; j += i){
+            not_prime[j] = true;
         }
     }
 
-    return res;
+    for(int i = 0; i <= MAX; ++i){
+        pre[i] = pre[i - 1] + (!not_prime[i]);
+    }
 }
 
 void solve(){
-    for(int n = 8; n <= 8; ++n){
-        cout << n << ": " << trau(n) << '\n';
-    }
+    int n;
+    cin >> n;
+
+    int sq = sqrt(n) + 1e-9;
+    int res = pre[n] - pre[sq] + 1;
+
+    cout << res << '\n';
 }
 
 signed main(){
     ios_base::sync_with_stdio(0); cin.tie(0);
 
     int t = 1;
-//    cin >> t;
+    cin >> t;
 
+    sieve();
     while(t--){
         solve();
     }
