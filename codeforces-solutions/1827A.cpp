@@ -9,7 +9,6 @@ using namespace std;
 #define int long long
 const int MOD = 1e9 + 7;
 
-// bai nhu cc
 void solve(){
     int n;
     cin >> n;
