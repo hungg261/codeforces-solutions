@@ -6,79 +6,82 @@ Time (YYYY-MM-DD-hh.mm.ss): 2026-02-01-00.13.14
 #include<bits/stdc++.h>
 using namespace std;
 
-#define int long long
+#ifdef _WIN32
+#define GETCHAR _getchar_nolock
+#else
+#define GETCHAR getchar_unlocked
+#endif
+
+inline int readInt() {
+    int x = 0;
+    char ch = GETCHAR();
+    while (ch < '0' || ch > '9') {
+        if (ch == EOF) return -1;
+        ch = GETCHAR();
+    }
+    while (ch >= '0' && ch <= '9') {
+        x = (x << 3) + (x << 1) + (ch - '0');
+        ch = GETCHAR();
+    }
+    return x;
+}
+
+struct Node{
+    int value;
+    Node *l, *r;
+
+    Node(int _value = 0): value(_value), l(NULL), r(NULL){}
+    Node(Node *_l, Node *_r): value(_l->value + _r->value), l(_l), r(_r){}
+    Node(Node *node): value(node->value), l(node->l), r(node->r){}
+};
 
 const int MAXN = 35000, MAXK = 100;
-int arr[MAXN + 5], n, k;
+int arr[MAXN + 5], n, k, nxt[MAXN + 5];
+Node* nodes[MAXN + 5];
+
+Node *build(int l, int r){
+    if(l == r){
+        return new Node((int)0);
+    }
+
+    int mid = (l + r) >> 1;
+    return new Node(build(l, mid), build(mid + 1, r));
+}
+
+Node *update(Node *node, int l, int r, int idx, int val){
+    if(l == r){
+        return new Node((int)node->value + val);
+    }
+
+    int mid = (l + r) >> 1;
+    if(idx <= mid) return new Node(update(node->l, l, mid, idx, val), node->r);
+    else return new Node(node->l, update(node->r, mid + 1, r, idx, val));
+}
+
+int get(Node *node, int l, int r, int u, int v){
+    if(!node || r < u || v < l) return 0;
+    if(u <= l && r <= v) return node->value;
+
+    int mid = (l + r) >> 1;
+    return get(node->l, l, mid, u, v) + get(node->r, mid + 1, r, u, v);
+}
+
+int cost(int l, int r){
+    return get(nodes[n], 1, n, 1, r) - get(nodes[l - 1], 1, n, 1, r);
+}
+
 int dp[MAXK + 5][MAXN + 5];
-
-// test dp / expected TLE
-int w(int l, int r){
-    map<int, pair<int, int>> mp;
-    for(int i = l; i <= r; ++i){
-        if(mp.count(arr[i]))
-            mp[arr[i]].second = i;
-        else mp[arr[i]] = {i, i};
-    }
-
-    int res = 0;
-    for(const pair<int, pair<int, int>>& p: mp){
-        res += p.second.second - p.second.first;
-    }
-    return res;
-}
-
-void trau(){
-    memset(dp, 0x3f, sizeof dp);
-    dp[0][0] = 0;
-
-    for(int c = 1; c <= k; ++c){
-        for(int i = 1; i <= n; ++i){
-            for(int j = 1; j <= i; ++j){
-                dp[c][i] = min(dp[c][i], dp[c - 1][j - 1] + w(j, i));
-            }
-        }
-    }
-
-    cout << dp[k][n] << '\n';
-}
-
-int pre[MAXN + 5], suf[MAXN + 5];
-
-int curCost = 0;
-int L, R;
-
-void addL(int idx){
-    curCost += pre[idx];
-}
-
-void addR(int idx){
-    curCost += suf[idx];
-}
-
-void popL(int idx){
-    curCost -= pre[idx];
-}
-
-void popR(int idx){
-    curCost -= suf[idx];
-}
-
-void move(int l, int r){
-    while(L > l) addL(--L);
-    while(R < r) addR(++R);
-    while(L < l) popL(L++);
-    while(R > r) popR(R--);
-}
 
 void computeDp(int c, int l, int r, int optL, int optR){
     if(l > r) return;
 
     int mid = (l + r) >> 1;
-    pair<int, int> best = {LLONG_MAX, -1};
+    pair<int, int> best = {INT_MAX, -1};
+
+    int curCost = cost(optL, mid);
     for(int i = optL; i <= min(optR, mid); ++i){
-        move(i, mid);
         best = min(best, {dp[c - 1][i - 1] + curCost, i});
+        if(nxt[i] != -1 && nxt[i] <= mid) curCost -= nxt[i] - i;
     }
 
     dp[c][mid] = best.first;
@@ -93,7 +96,6 @@ void solve(){
     dp[0][0] = 0;
 
     for(int c = 1; c <= k; ++c){
-        L = 1; R = 0;
         computeDp(c, 1, n, 1, n);
     }
     cout << dp[k][n] << '\n';
@@ -101,30 +103,27 @@ void solve(){
 
 signed main(){
     ios_base::sync_with_stdio(0); cin.tie(0);
-    cin >> n >> k;
+    n = readInt();
+    k = readInt();
     for(int i = 1; i <= n; ++i){
-        cin >> arr[i];
+        arr[i] = readInt();
     }
 
-    vector<int> last(n + 1);
-    fill(begin(last) + 1, end(last), -1);
-
-    for(int i = 1; i <= n; ++i){
-        pre[i] = pre[i - 1];
-        if(last[arr[i]] != -1){
-            pre[i] = i - last[arr[i]];
-        }
-
-        last[arr[i]] = i;
-    }
-
-    fill(begin(last) + 1, end(last), -1);
+    vector<int> last(n + 1, -1);
     for(int i = n; i >= 1; --i){
-        if(last[arr[i]] != -1){
-            suf[i] = last[arr[i]] - i;
+        if(last[arr[i]] != 0){
+            nxt[i] = last[arr[i]];
         }
+        else nxt[i] = -1;
 
         last[arr[i]] = i;
+    }
+
+    nodes[0] = build(1, n);
+    for(int i = 1; i <= n; ++i){
+        nodes[i] = nodes[i - 1];
+        if(nxt[i] != -1)
+            nodes[i] = update(nodes[i], 1, n, nxt[i], nxt[i] - i);
     }
 
     solve();
