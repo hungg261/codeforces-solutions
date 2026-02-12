@@ -17,44 +17,26 @@ void solve(){
         cin >> arr[i];
     }
 
-    vector<int> suf(n + 2);
-    suf[n + 1] = 0;
-    for(int i = n; i >= 1; --i) suf[i] = suf[i + 1] + arr[i];
-
-    int total = 0, cnt = n;
-    int mn = 1e18, mx = -1e18;
-    for(int i = 1; i <= n; ++i) total += arr[i];
-    for(int i = 1; i + 1 <= n; ++i){
-        if(arr[i] < arr[i + 1]){
-            total -= arr[i];
-            cnt--;
-        }
-        else{
-            int avg = total / cnt;
-
-            int delta = arr[i] - avg;
-            if(delta < 0){
-                continue;
-            }
-
-            total -= arr[i] + arr[i + 1];
-
-            arr[i] -= delta;
-            arr[i + 1] += delta;
-
-            total += arr[i + 1];
-            --cnt;
+    vector<pair<int, int>> sta;
+    for(int i = 1; i <= n; ++i){
+        int sum = arr[i], cnt = 1;
+        while(!sta.empty() && sta.back().first > sum / cnt){
+            sum += sta.back().first * (sta.back().second);
+            cnt += sta.back().second;
+            sta.pop_back();
         }
 
-        mn = min(mn, arr[i]);
-        mx = max(mx, arr[i]);
+        sta.emplace_back(sum / cnt, cnt - sum % cnt);
+        if(sum % cnt > 0) sta.emplace_back(sum / cnt + 1, sum % cnt);
     }
 
-    mn = min(mn, arr[n]);
-    mx = max(mx, arr[n]);
+    int mn = 1e18, mx = -1e18;
+    for(const pair<int, int>& p: sta){
+        mn = min(mn, p.first);
+        mx = max(mx, p.first);
+    }
 
     cout << mx - mn << '\n';
-//    for(int i = 1; i <= n; ++i) cerr << arr[i] << ' '; cerr << '\n';
 }
 
 signed main(){
