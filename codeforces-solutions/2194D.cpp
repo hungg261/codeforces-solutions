@@ -32,15 +32,15 @@ void solve(){
     int sum = 0;
     int h = 1;
     for(int j = 1; j <= m; ++j){
-        for(int i = h; i <= n; ++i){
-            if((sum + pre[j][i]) * 2 <= cnt1){
-                sum += pre[j][i];
+        while(h <= n){
+            if((sum + pre[j][h]) * 2 <= cnt1){
+                sum += pre[j][h];
                 break;
             }
             else{
                 res += "D";
+                ++h;
             }
-            ++h;
         }
         res += "R";
     }
