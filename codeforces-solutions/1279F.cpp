@@ -8,24 +8,48 @@ using namespace std;
 
 #define int long long
 
-vector<vector<int>> dp;
+const int INF = 1e18;
+vector<vector<pair<int, int>>> dp;
 int n, k, l;
+string s;
+
+int g(const pair<int, int>& a){
+    return min(a.first, a.second);
+}
 
 signed main(){
     ios_base::sync_with_stdio(0); cin.tie(0);
     cin >> n >> k >> l;
-    dp.resize(k + 1, vector<int>(n + 1, 1e18));
+    cin >> s;
 
-    dp[0][0] = 0;
+    dp.resize(k + 1, vector<pair<int, int>>(n + 1, make_pair(INF, INF)));
+
+    dp[0][0] = {0, 0};
     for(int c = 1; c <= k; ++c){
-        for(int i = 1; i <= n; ++i){
-            for(int j = 1; j <= i; ++j){
-                dp[c][i] = min(dp[c][i], dp[c - 1][j - 1] + (i - j + 1));
-            }
+        for(int i = l; i <= n; ++i){
+            dp[c][i] = dp[c][i - 1];
+
+            int j = i - l + 1;
+
+            pair<int, int> prv = dp[c - 1][j - 1];
+            if(prv.first < prv.second)
+                swap(prv.first, prv.second);
+
+            prv.first += l;
+
+            if(g(prv) < g(dp[c][i]))
+                dp[c][i] = prv;
         }
     }
 
-    cout << dp[k][n] << '\n';
+    for(int c = 0; c <= k; ++c){
+        for(int i = 0; i <= n; ++i){
+            cerr << dp[c][i].first << "/" << dp[c][i].second << ' ';
+        }
+        cerr << '\n';
+    }
+
+    cout << g(dp[k][n]) << '\n';
 
     return 0;
 }
