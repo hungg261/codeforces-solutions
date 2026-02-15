@@ -6,6 +6,8 @@ Time (YYYY-MM-DD-hh.mm.ss): 2026-02-15-12.07.39
 #include<bits/stdc++.h>
 using namespace std;
 
+// test
+
 void solve(){
     int n, k;
     cin >> n >> k;
