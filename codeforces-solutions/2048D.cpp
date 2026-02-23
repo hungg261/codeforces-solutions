@@ -28,7 +28,6 @@ void solve(){
 
     int pos = upper_bound(begin(b) + 1, end(b), P) - begin(b) - 1;
     for(int k = 1; k <= m; ++k){
-
         int res = 0;
         res += pos / k;
 
