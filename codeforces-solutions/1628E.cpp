@@ -6,6 +6,8 @@ Time (YYYY-MM-DD-hh.mm.ss): 2026-02-27-21.07.05
 #include<bits/stdc++.h>
 using namespace std;
 
+// unfinished version, go to 1628E_v2.cpp
+
 struct DSU{
     int n;
     vector<int> par, sz;
